@@ -24,3 +24,9 @@ services:
         value: bookings@flowcraftplumbing.com
       - key: SEND_CUSTOMER_CONFIRMATION_EMAIL
         value: "True"
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: admin@flowcraftplumbing.com
+      - key: DJANGO_SUPERUSER_PASSWORD
+        generateValue: true

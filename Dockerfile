@@ -26,4 +26,4 @@ COPY --from=frontend-build /app/frontend/dist /app/frontend/dist
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
-CMD python manage.py migrate --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000}
+CMD python manage.py migrate --noinput && python manage.py ensure_superuser && python manage.py seed_demo_data && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000}
