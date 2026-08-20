@@ -6,11 +6,15 @@ from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
     help = (
-        "Creates a superuser from DJANGO_SUPERUSER_USERNAME/EMAIL/PASSWORD "
-        "env vars if one doesn't already exist. Idempotent — safe to run "
-        "on every deploy/startup (used instead of the interactive "
-        "createsuperuser command, which needs a shell that free-tier "
-        "Render web services don't have)."
+        "Creates or updates a superuser from DJANGO_SUPERUSER_USERNAME/"
+        "EMAIL/PASSWORD env vars, resetting the password to match those "
+        "env vars on every run. Safe to run on every deploy/startup — "
+        "used instead of the interactive createsuperuser/changepassword "
+        "commands, which need a shell that free-tier Render web services "
+        "don't have. Since the password is reset every run, changing it "
+        "in the Render dashboard's env vars (and redeploying) is the way "
+        "to change the live password; changing it by hand in /admin/ "
+        "will be overwritten by the next deploy."
     )
 
     def handle(self, *args, **options):
@@ -20,14 +24,24 @@ class Command(BaseCommand):
 
         if not username or not password:
             self.stdout.write(
-                "DJANGO_SUPERUSER_USERNAME/PASSWORD not set — skipping superuser creation."
+                "DJANGO_SUPERUSER_USERNAME/PASSWORD not set — skipping superuser sync."
             )
             return
 
         User = get_user_model()
-        if User.objects.filter(username=username).exists():
-            self.stdout.write(f"Superuser '{username}' already exists — skipping.")
-            return
+        user, created = User.objects.get_or_create(
+            username=username,
+            defaults={"email": email, "is_staff": True, "is_superuser": True},
+        )
+        user.email = email
+        user.is_staff = True
+        user.is_superuser = True
+        user.set_password(password)
+        user.save()
 
-        User.objects.create_superuser(username=username, email=email, password=password)
-        self.stdout.write(self.style.SUCCESS(f"Created superuser '{username}'."))
+        if created:
+            self.stdout.write(self.style.SUCCESS(f"Created superuser '{username}'."))
+        else:
+            self.stdout.write(
+                self.style.SUCCESS(f"Synced superuser '{username}' (password reset to env var value).")
+            )
