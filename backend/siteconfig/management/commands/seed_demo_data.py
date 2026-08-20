@@ -17,15 +17,39 @@ SEED_ASSETS_DIR = Path(__file__).resolve().parents[3] / "seed_assets"
 
 def local_image(filename):
     """
-    Load a demo photo from backend/seed_assets/ as a real uploaded file
-    (not a hotlinked URL), so it works fully offline and is manageable
-    like any other admin upload. Returns None if the file is missing so
-    seeding never hard-fails on a missing asset.
+    Load a demo photo from backend/seed_assets/ as file bytes ready for
+    an ImageField. Returns None if the file is missing so seeding never
+    hard-fails on a missing asset.
     """
     path = SEED_ASSETS_DIR / filename
     if not path.exists():
         return None
-    return ContentFile(path.read_bytes(), name=filename)
+    return path.read_bytes()
+
+
+def ensure_image(instance, field_name, filename):
+    """
+    Makes sure `instance.<field_name>` actually has a file sitting on
+    disk, writing it if missing — regardless of whether the database row
+    was just created or already existed.
+
+    This matters on hosts with an ephemeral filesystem (e.g. Render's
+    free tier): the database (Postgres) persists across deploys, but
+    each deploy is a fresh container with an empty disk. Plain
+    get_or_create(..., defaults={"image": ...}) only writes the file
+    when the *row* is first created — on every later deploy the row
+    already exists in Postgres, defaults are skipped, and the image is
+    silently never re-written into the new container. Calling this
+    after every get_or_create re-attaches the file whenever it's
+    missing, so images survive redeploys.
+    """
+    field_file = getattr(instance, field_name)
+    if field_file and field_file.name and field_file.storage.exists(field_file.name):
+        return  # already on disk in this container — nothing to do
+    data = local_image(filename)
+    if data is None:
+        return
+    field_file.save(filename, ContentFile(data, name=filename), save=True)
 
 
 class Command(BaseCommand):
@@ -46,7 +70,7 @@ class Command(BaseCommand):
             ),
         )
 
-        CompanyInfo.objects.get_or_create(
+        company_info, _ = CompanyInfo.objects.get_or_create(
             headline="Craftsmanship you can trust, service you can rely on.",
             defaults=dict(
                 description=(
@@ -55,7 +79,6 @@ class Command(BaseCommand):
                     "modern diagnostic tools with old-fashioned craftsmanship to deliver lasting "
                     "repairs, clean installations and honest, transparent pricing — every single time."
                 ),
-                image=local_image("about-1.jpg"),
                 years_experience=15,
                 jobs_completed=5000,
                 happy_customers=3500,
@@ -64,8 +87,9 @@ class Command(BaseCommand):
                 certified_technicians=22,
             ),
         )
+        ensure_image(company_info, "image", "about-1.jpg")
 
-        HeroSection.objects.get_or_create(
+        hero, _ = HeroSection.objects.get_or_create(
             heading="Reliable Plumbing. Done Right the First Time.",
             defaults=dict(
                 subheading=(
@@ -73,11 +97,11 @@ class Command(BaseCommand):
                     "properties — available when you need us."
                 ),
                 badge_text="Licensed & Insured Master Plumbers",
-                background_image=local_image("hero-2.jpg"),
                 cta_primary_text="Book a Plumber",
                 cta_secondary_text="Call Now",
             ),
         )
+        ensure_image(hero, "background_image", "hero-2.jpg")
 
         EmergencyBanner.objects.get_or_create(
             heading="Plumbing Emergency? We're Ready to Help.",
@@ -212,7 +236,7 @@ class Command(BaseCommand):
         ]
         for i, (name, cat, desc, icon, price, featured) in enumerate(services):
             slug = name.lower().replace(" & ", "-").replace(" ", "-")
-            Service.objects.get_or_create(
+            service, _ = Service.objects.get_or_create(
                 slug=slug,
                 defaults=dict(
                     category=cats[cat],
@@ -220,12 +244,12 @@ class Command(BaseCommand):
                     short_description=desc,
                     description=f"{desc} Our licensed FlowCraft technicians handle every job with precision, premium parts and a full workmanship guarantee.",
                     icon_name=icon,
-                    image=local_image(service_photos[i % len(service_photos)]),
                     starting_price=price,
                     is_featured=featured,
                     order=i,
                 ),
             )
+            ensure_image(service, "image", service_photos[i % len(service_photos)])
 
         packages = [
             ("Basic Service", 499, ["Inspection", "Minor repair", "Basic maintenance"], False),
@@ -245,14 +269,15 @@ class Command(BaseCommand):
             ("Meera Iyer", "Commercial Plumbing Specialist", "Sewer line & commercial systems", 14, "Licensed Commercial Plumber", "team-4.jpg"),
         ]
         for i, (name, desig, spec, years, cert, photo) in enumerate(technicians):
-            Technician.objects.get_or_create(
+            technician, _ = Technician.objects.get_or_create(
                 name=name,
                 defaults=dict(
                     designation=desig, specialization=spec, years_experience=years,
                     certifications=cert, bio=f"{name} has {years}+ years of hands-on plumbing experience across residential and commercial projects.",
-                    photo=local_image(photo), order=i,
+                    order=i,
                 ),
             )
+            ensure_image(technician, "photo", photo)
 
         # --- Gallery ---
         gallery_cats = ["Residential", "Commercial", "Bathroom", "Kitchen", "Pipe Repair", "Water Heater", "Emergency Work"]
@@ -264,17 +289,17 @@ class Command(BaseCommand):
 
         for i in range(14):
             cat_name = gallery_cats[i % len(gallery_cats)]
-            Project.objects.get_or_create(
+            project, _ = Project.objects.get_or_create(
                 title=f"{cat_name} Project #{i + 1}",
                 defaults=dict(
                     category=gcats[cat_name],
-                    image=local_image(gallery_photos[i % len(gallery_photos)]),
                     description=f"Completed {cat_name.lower()} plumbing work by the FlowCraft team.",
                     location="Chennai",
                     is_featured=(i < 4),
                     order=i,
                 ),
             )
+            ensure_image(project, "image", gallery_photos[i % len(gallery_photos)])
 
         videos = [
             ("Precision Pipe Repair in Action", "Watch our technicians repair a damaged pipe with zero mess.", "service-1.jpg"),
@@ -282,10 +307,11 @@ class Command(BaseCommand):
             ("Professional Drain Cleaning", "Deep drain cleaning using advanced hydro-jetting equipment.", "service-3.jpg"),
         ]
         for i, (title, desc, photo) in enumerate(videos):
-            Video.objects.get_or_create(
+            video, _ = Video.objects.get_or_create(
                 title=title,
-                defaults=dict(description=desc, thumbnail=local_image(photo), order=i),
+                defaults=dict(description=desc, order=i),
             )
+            ensure_image(video, "thumbnail", photo)
 
         # Before/after keeps an illustrated (icon) treatment rather than
         # real photos on purpose — the demo photo set has no genuine
@@ -316,13 +342,13 @@ class Command(BaseCommand):
             ("Anjali Nair", "Tambaram, Chennai", 5, "Our office plumbing issues were sorted out quickly with minimal disruption to work. Highly recommend.", "Commercial Plumbing", "testimonial-1.jpg"),
         ]
         for i, (name, loc, rating, review, service, photo) in enumerate(testimonials):
-            Testimonial.objects.get_or_create(
+            testimonial, _ = Testimonial.objects.get_or_create(
                 customer_name=name,
                 defaults=dict(
-                    customer_image=local_image(photo),
                     location=loc, rating=rating, review=review, service_received=service,
                     is_featured=(i < 3), order=i,
                 ),
             )
+            ensure_image(testimonial, "customer_image", photo)
 
         self.stdout.write(self.style.SUCCESS("Demo data seeded successfully."))
