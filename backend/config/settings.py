@@ -29,12 +29,21 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 7  # 1 week; raise once confident
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
+CLOUDINARY_URL = config("CLOUDINARY_URL", default="")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+]
+
+if CLOUDINARY_URL:
+    # Must come before django.contrib.staticfiles per django-cloudinary-storage.
+    INSTALLED_APPS += ["cloudinary_storage", "cloudinary"]
+
+INSTALLED_APPS += [
     "django.contrib.staticfiles",
     "rest_framework",
     "django_filters",
@@ -130,6 +139,9 @@ if FRONTEND_DIST.exists():
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+if CLOUDINARY_URL:
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
