@@ -1,0 +1,12 @@
+Demo photography in this folder is sourced from the free "Plumberz" HTML
+template by HTML Codex / ThemeWagon (https://themewagon.com/themes/plumberz/,
+https://github.com/themewagon/Plumberz), licensed under a Creative Commons
+Attribution 4.0 International License. Per that license, attribution/backlink
+to HTML Codex must be retained unless a Credit Removal License is purchased
+(https://htmlcodex.com/credit-removal) — see the "Website powered by" credit
+in the site footer.
+
+These are demo/placeholder photos only, meant to be replaced with real
+company photography via the Django Admin's image upload fields whenever
+you're ready (Services, Technicians, Testimonials, About, Hero, Gallery,
+Videos are all admin-editable — no code changes needed).

@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: "Sora", "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --color-navy: #0b1726;
+  --color-navy-light: #142338;
+  --color-blue: #1261a0;
+  --color-blue-light: #1a7bc9;
+  --color-accent: #2ea8ff;
+  --color-warm: #f5a623;
+  --color-surface: #f4f7fa;
+  --color-surface-alt: #eaf1f8;
+
+  --animate-marquee: marquee 28s linear infinite;
+  --animate-pulse-ring: pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  70% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-surface);
+  color: var(--color-navy);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: white;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-dark {
+  background: rgba(11, 23, 38, 0.55);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #2ea8ff, #1261a0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.input {
+  border: 1px solid rgb(11 23 38 / 0.12);
+  border-radius: 0.875rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  background: var(--color-surface);
+  color: var(--color-navy);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(46 168 255 / 0.15);
+  background: white;
+}
+
+/* Glowing button hover — accent (blue) and warm (amber) variants */
+.btn-glow {
+  transition: box-shadow 0.35s ease, transform 0.25s ease, filter 0.25s ease;
+}
+.btn-glow:hover {
+  box-shadow:
+    0 0 0 1px rgb(46 168 255 / 0.45),
+    0 0 22px 2px rgb(46 168 255 / 0.55),
+    0 0 60px 14px rgb(46 168 255 / 0.3);
+  filter: brightness(1.06);
+}
+.btn-glow:active { transform: scale(0.97); }
+
+.btn-glow-warm:hover {
+  box-shadow:
+    0 0 0 1px rgb(245 166 35 / 0.5),
+    0 0 22px 2px rgb(245 166 35 / 0.6),
+    0 0 60px 14px rgb(245 166 35 / 0.32);
+  filter: brightness(1.06);
+}
+
+.btn-glow-dark:hover {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.25),
+    0 0 24px 3px rgb(46 168 255 / 0.35);
+}
+
+/* Generic card hover lift, used across sections that don't already
+   have a bespoke Framer Motion hover treatment */
+.card-hover {
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px -16px rgb(11 23 38 / 0.18), 0 0 0 1px rgb(18 97 160 / 0.08);
+}
+.card-hover-dark:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px -12px rgb(0 0 0 / 0.35), 0 0 0 1px rgb(46 168 255 / 0.25);
+}
+
+.icon-pop {
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.group:hover .icon-pop,
+.card-hover:hover .icon-pop,
+.card-hover-dark:hover .icon-pop {
+  transform: scale(1.15) rotate(-6deg);
+}
+
+/* Blueprint-style diagonal line texture used behind illustrations */
+.blueprint-pattern {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgb(255 255 255 / 0.06) 0px,
+    rgb(255 255 255 / 0.06) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+}
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -200; }
+}
+.pipe-flow {
+  stroke-dasharray: 6 10;
+  animation: dash-flow 6s linear infinite;
+}

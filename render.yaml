@@ -1,0 +1,26 @@
+databases:
+  - name: flowcraft-plumbing-db
+    plan: free
+
+services:
+  - type: web
+    name: flowcraft-plumbing
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/site-settings/
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: flowcraft-plumbing-db
+          property: connectionString
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.console.EmailBackend
+      - key: COMPANY_NOTIFICATION_EMAIL
+        value: bookings@flowcraftplumbing.com
+      - key: SEND_CUSTOMER_CONFIRMATION_EMAIL
+        value: "True"
