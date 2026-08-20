@@ -13,8 +13,6 @@ import WhyChooseUs from "./components/sections/WhyChooseUs";
 import HowItWorks from "./components/sections/HowItWorks";
 import VideoSection from "./components/sections/VideoSection";
 import EmergencySection from "./components/sections/EmergencySection";
-import BeforeAfter from "./components/sections/BeforeAfter";
-import Gallery from "./components/sections/Gallery";
 import ServiceAreas from "./components/sections/ServiceAreas";
 import Technicians from "./components/sections/Technicians";
 import Testimonials from "./components/sections/Testimonials";
@@ -36,8 +34,7 @@ function App() {
         <HowItWorks />
         <VideoSection />
         <EmergencySection />
-        <BeforeAfter />
-        <Gallery />
+  
         <ServiceAreas />
         <Technicians />
         <Testimonials />
